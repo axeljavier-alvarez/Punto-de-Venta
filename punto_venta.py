@@ -121,79 +121,68 @@ def on_leave(e):
 
 #---------------------------Ventana Principal para gestion de productos
 def show_gestion_productos():
+    def ocultar_indicador():
+        ingresar_indicador.config(bg="#0477BF")
+        gestionar_indicador.config(bg="#0477BF")
+
+    def mostrar_indicador( indicador , frame ):
+        ocultar_indicador()
+        indicador.config(bg="#D97A07")
+        frame.tkraise()
+
     window_gestion_productos = tk.Toplevel(root)
     window_gestion_productos.title("Gestión de Productos")  
-    window_gestion_productos.geometry("500x400")
+    window_gestion_productos.geometry("850x360")
     window_gestion_productos.configure(bg="#2E2E2E")
 
-    menu_bar = Menu(window_gestion_productos)
-    window_gestion_productos.config(menu=menu_bar)
-    file_menu = Menu(menu_bar, tearoff=0)
-    menu_bar.add_cascade(label="Archivo", menu=file_menu)
-    file_menu.add_command(label="Agregar Producto", command=show_ingresar_producto)
-    file_menu.add_command(label="Modificar Producto" , command=show_ges_productos)
-    file_menu.add_command(label="Eliminar Producto")
-    file_menu.add_command(label="Buscar Producto")
-    file_menu.add_command(label="Mostrar Lista de productos")
-    file_menu.add_separator()
-    file_menu.add_command(label="Salir", command=window_gestion_productos.quit)
+    con_menu = tk.Frame(window_gestion_productos, background="#0477BF")
+    con_menu.pack(fill=tk.X)
+    con_menu.pack_propagate(False)  
+    con_menu.configure(height=40)
 
-#---------------------------Ingresar productos
-def show_ingresar_producto():
-    window_ingresar_productos = tk.Toplevel(root)
-    window_ingresar_productos.title("Ingresar Productos")  
-    window_ingresar_productos.geometry("350x250")  # 300x190
-    window_ingresar_productos.configure(bg="#2E2E2E")
+    btn_ingresar = tk.Button (con_menu, text="Ingresar", font=('Bold',10) , bd = 0 , background="#0477BF", command=lambda:mostrar_indicador(ingresar_indicador, con_add_product))
+    btn_ingresar.pack(side=tk.LEFT , padx=10, fill=tk.Y)
+    ingresar_indicador = tk.Label(con_menu, text='', bg='#D97A07')
+    ingresar_indicador.place(x=10, y=35, width=55, height=10)
 
-    lbl_nombre = tk.Label(window_ingresar_productos, text="Codigo del Producto: ", fg="white",background="#2E2E2E")
-    lbl_nombre.pack(anchor="w" , padx=30 )
-    codigo_producto = tk.Entry(window_ingresar_productos )
-    codigo_producto.pack( anchor="w", padx=30, pady=5 , fill="x" )
+    btn_gestionar = tk.Button(con_menu, text="Gestionar Productos" , font=('Bold',10), bd = 0,background="#0477BF", command=lambda:mostrar_indicador(gestionar_indicador, con_gestion_productos))
+    btn_gestionar.pack(side=tk.LEFT, fill=tk.Y)
+    gestionar_indicador = tk.Label( con_menu, text='', bg='#0477BF' )
+    gestionar_indicador.place(x=73.25, y=35, width=128 , height=10)
 
-    lbl_codigo = tk.Label(window_ingresar_productos, text="Nombre del Producto: ", fg="white",background="#2E2E2E")
-    lbl_codigo.pack( anchor="w" , padx=30  )
-    nombre_producto = tk.Entry(window_ingresar_productos)
-    nombre_producto.pack( anchor="w", padx=30, pady=5 , fill="x"  )
+#Panel para Registrar productos
+    margin_x = 100
+    con_add_product = tk.Frame( window_gestion_productos , background="#2E2E2E" )
+    con_add_product.place(x=0,y=40,width=850, height=320)
+    lbl_margin_y =tk.Label(con_add_product, text="", bg="#2E2E2E")
+    lbl_margin_y.pack(anchor="w", pady=4)
+    lbl_nombre = tk.Label(con_add_product, text="Codigo del Producto: ", fg="white",background="#2E2E2E")
+    lbl_nombre.pack(anchor="w" , padx=margin_x )
+    codigo_producto = tk.Entry(con_add_product )
+    codigo_producto.pack( anchor="w", padx=margin_x, pady=5 , fill="x" )
 
-    lbl_precio_u = tk.Label(window_ingresar_productos, text="Precio del Producto: ", fg="white",background="#2E2E2E")
-    lbl_precio_u.pack( anchor="w" , padx=30 )
-    precio_producto = tk.Entry(window_ingresar_productos)
-    precio_producto.pack( anchor="w", padx=30, pady=5 , fill="x"  )
+    lbl_codigo = tk.Label(con_add_product, text="Nombre del Producto: ", fg="white",background="#2E2E2E")
+    lbl_codigo.pack( anchor="w" , padx=margin_x  )
+    nombre_producto = tk.Entry(con_add_product)
+    nombre_producto.pack( anchor="w", padx=margin_x, pady=5 , fill="x"  )
 
-    lbl_stock = tk.Label(window_ingresar_productos, text="Stock del Producto: ", fg="white",background="#2E2E2E")
-    lbl_stock.pack( anchor="w" , padx=30 )
-    stock_producto = tk.Entry(window_ingresar_productos)
-    stock_producto.pack( anchor="w", padx=30, pady=5 , fill="x"  )
+    lbl_precio_u = tk.Label(con_add_product, text="Precio del Producto: ", fg="white",background="#2E2E2E")
+    lbl_precio_u.pack( anchor="w" , padx=margin_x )
+    precio_producto = tk.Entry(con_add_product)
+    precio_producto.pack( anchor="w", padx=margin_x, pady=5 , fill="x"  )
 
-    btn_agregar = tk.Button(window_ingresar_productos, text="Agregar Producto", command=lambda: agregar_producto(codigo_producto, nombre_producto, precio_producto, stock_producto, window_ingresar_productos))
-    btn_agregar.pack( side='left', padx=40 )
+    lbl_stock = tk.Label(con_add_product, text="Stock del Producto: ", fg="white",background="#2E2E2E")
+    lbl_stock.pack( anchor="w" , padx=margin_x )
+    stock_producto = tk.Entry(con_add_product)
+    stock_producto.pack( anchor="w", padx=margin_x, pady=5 , fill="x"  )
+
+    btn_agregar = tk.Button(con_add_product, text="Agregar Producto", command=lambda: agregar_producto(codigo_producto, nombre_producto, precio_producto, stock_producto, window_gestion_productos))
+    btn_agregar.pack( side='left', padx=margin_x )
    
-    btn_cancelar = tk.Button(window_ingresar_productos, text="Cancelar")
-    btn_cancelar.pack( side='right', padx=40 )
-
-def agregar_producto( codigo:any=None, nombre:any=None, precio:any=None, stock:any=None, ventana:any=None):
-    if ( codigo.get() == "" and nombre.get() == "" and precio.get() == "" and stock.get() == ""):
-        messagebox.showerror("Error", "Todos los campos son requeridos")
-        return
-   
-    try:
-        with open(DATA_FILE_PRODDUCTOS, "a") as file:
-            file.write(f"{codigo.get()},{nombre.get()},{float(precio.get())},{int(stock.get())}\n")
-            messagebox.showinfo("Producto Agregado", "Producto agregado correctamente")
-
-            otro_producto = messagebox.askyesno("Agregar otro producto", "¿Desea agregar otro producto?")
-            if not otro_producto:
-                ventana.destroy()
-            else:
-                codigo.delete(0, tk.END)
-                nombre.delete(0, tk.END)
-                precio.delete(0, tk.END)
-                stock.delete(0, tk.END)
-    except:
-        messagebox.showerror("Error", "Verifique los campos ingresados.")
-
-#---------------------------Accion de productos(Eliminiar, Modificar, Buscar)
-def show_ges_productos():
+    btn_cancelar = tk.Button(con_add_product, text="Cancelar")
+    btn_cancelar.pack( side='right', padx=margin_x )
+    
+#Panel para Gestionar Productos
     def buscar():
         if(  no_tarea.get() == ""):
             load_list()
@@ -312,51 +301,67 @@ def show_ges_productos():
         
             btn_cancelar = tk.Button(window_ingresar_productos, text="Cancelar", command=window_ingresar_productos.destroy)
             btn_cancelar.pack( side='right', padx=40 )
-            
+
     def load_list():
         for i in tree.get_children():
             tree.delete(i)
         for producto in leer_productos():
             tree.insert("", tk.END, values=producto)
 
-    window_acciones_productos = tk.Toplevel(root)
-    window_acciones_productos.title("Ingresar Productos")  
-    window_acciones_productos.geometry("850x350")
-    window_acciones_productos.configure(bg="#2E2E2E")
+    con_gestion_productos = tk.Frame(window_gestion_productos, background='#2E2E2E')
+    con_gestion_productos.place(x=0,y=40,width=850, height=320)
     productos = leer_productos()
 
-    label1 = tk.Label(window_acciones_productos, text="Buscar Tarea: ", background="#2E2E2E", fg="white")
+    label1 = tk.Label(con_gestion_productos, text="Buscar Tarea: ", background="#2E2E2E", fg="white")
     label1.grid(row=0, column=0, padx=25, pady=5)
-    no_tarea = tk.Entry(window_acciones_productos)
+    no_tarea = tk.Entry(con_gestion_productos)
     no_tarea.grid(row=0, column=1, padx=0, pady=5)
     lista_opciones = ["ID", "Nombre"]
-    lista_menu = tk.StringVar(window_acciones_productos)
+    lista_menu = tk.StringVar(con_gestion_productos)
     lista_menu.set("Buscar por:")
-    checklist = tk.OptionMenu(window_acciones_productos, lista_menu, *lista_opciones)
+    checklist = tk.OptionMenu(con_gestion_productos, lista_menu, *lista_opciones)
     checklist.grid(row=0,column=2,padx=25,pady=5)
-    button2 = tk.Button(window_acciones_productos, text="Buscar", command=buscar)
+    button2 = tk.Button(con_gestion_productos, text="Buscar", command=buscar)
     button2.grid(row=0, column=3, pady=5,padx=25)
    
     columnas = ('Codigo', 'Nombre', 'Precio', 'Stock')
-    tree = ttk.Treeview(window_acciones_productos, columns=columnas, show='headings')
+    tree = ttk.Treeview(con_gestion_productos, columns=columnas, show='headings')
     tree.heading('Codigo', text='Codigo')
     tree.heading('Nombre', text='Nombre')
     tree.heading('Precio', text='Precio')
     tree.heading('Stock', text='Stock')
     tree.grid(row=1, column=0, columnspan=4, padx=5, pady=5)
-    srollbar = ttk.Scrollbar(window_acciones_productos, orient='vertical', command=tree.yview)
+    srollbar = ttk.Scrollbar(con_gestion_productos, orient='vertical', command=tree.yview)
     tree.config(yscrollcommand=srollbar.set)
     srollbar.grid(row=1, column=4, sticky='ns')
 
-    window_acciones_productos.grid_rowconfigure(1, weight=0)
-    window_acciones_productos.grid_columnconfigure(1, weight=1)
+    con_gestion_productos.grid_rowconfigure(1, weight=0)
+    con_gestion_productos.grid_columnconfigure(1, weight=1)
 
-    btn_editar = tk.Button(window_acciones_productos, text="Editar", command=editar_producto)
+    btn_editar = tk.Button(con_gestion_productos, text="Editar", command=editar_producto)
     btn_editar.grid(row=2, column=0, padx=5, pady=5)
 
-    btn_eliminar = tk.Button(window_acciones_productos, text="Eliminar", command=eliminar)
+    btn_eliminar = tk.Button(con_gestion_productos, text="Eliminar", command=eliminar)
     btn_eliminar.grid(row=2, column=1, padx=5, pady=5)
     load_list()
+    con_add_product.tkraise()
+
+def agregar_producto( codigo:any=None, nombre:any=None, precio:any=None, stock:any=None, ventana:any=None):
+    if ( codigo.get() == "" and nombre.get() == "" and precio.get() == "" and stock.get() == ""):
+        messagebox.showerror("Error", "Todos los campos son requeridos")
+        return
+   
+    try:
+        with open(DATA_FILE_PRODDUCTOS, "a") as file:
+            file.write(f"{codigo.get()},{nombre.get()},{float(precio.get())},{int(stock.get())}\n")
+            messagebox.showinfo("Producto Agregado", "Producto agregado correctamente")
+
+            codigo.delete(0, tk.END)
+            nombre.delete(0, tk.END)
+            precio.delete(0, tk.END)
+            stock.delete(0, tk.END)
+    except:
+        messagebox.showerror("Error", "Verifique los campos ingresados.")
 
 # Crear botones
 buttons = [

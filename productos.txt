@@ -1,9 +1,10 @@
 E482,Refrigerador LG,4500.0,5
 C820,Coca Cola,15.0,200
-C684,Kiwi,2.42,100
 C697,Sandia,5.5,90
 C964,Meloon,5.0,125
 E743,Laptop Asus Tuf,8000.0,9
 E726,Celular Samsung Galaxy A02,3200.0,6
 E236,Celular Xiaomi,1500.0,6
 E462,Televisor LG smart TV,2500.0,4
+C355,Dr. Peper cereza,5.0,1500
+E923,Laptop Lenovo i7,6000,8
