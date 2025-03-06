@@ -39,8 +39,10 @@ def leer_clientes():
     clientes = []
     with open(DATA_FILE_CLIENTES, "r") as file:
         for line in file:
-            id, nombre, direccion, telefono, email = line.strip().split(",")
-            clientes.append((id, nombre, direccion, telefono, email))
+            parts = line.strip().split(",")
+            if len(parts) == 5:
+                id, nombre, direccion, telefono, email = parts
+            clientes.append((int(id), nombre, direccion, telefono, email))
     return clientes
 
 # FUNCION PARA ELIMINAR TAREAS
@@ -56,12 +58,34 @@ def guardar_tareas(tareas):
 def guardar_clientes(clientes):
     with open(DATA_FILE_CLIENTES, "w") as file:
         for cliente in clientes:
-            file.write(",".join(cliente) + "\n")
+            file.write(f"{cliente[0]},{cliente[1]},{cliente[2]},{cliente[3]},{cliente[4]}\n")
+
+# ------------------------------Agregado
+def generar_id():
+    clientes = leer_clientes()
+    if len(clientes) == 0:
+        return 1
+    else:
+        return len(clientes) + 1
+
 
 # -------------------------------Agregado
-def ResultBusqueda(clientes=[], pal_buscar="", par_busqueda=0, ):
-    resutl = [cliente for cliente in clientes if re.match(f".*{pal_buscar}", cliente[par_busqueda], re.IGNORECASE)]
-    return resutl
+def ResultBusqueda(clientes, pal_buscar, par_busqueda):
+    resultado = []
+
+    print(f"Buscando: {pal_buscar} en campo {par_busqueda}")
+
+    for cliente in clientes:
+        if par_busqueda == 0:
+            if str(cliente[0]) == pal_buscar:
+                resultado.append(cliente)
+        elif par_busqueda == 1:
+            if re.search(f".*{pal_buscar}.*", cliente[1], re.IGNORECASE):
+                resultado.append(cliente)
+        else:
+            pass
+
+    return resultado
 
 # FUNCIONES FALTANTES:
 # 1. Asignar una tarea por medio del numero
@@ -127,6 +151,7 @@ def show_gestion_clientes():
         indicador.config(bg="#D97A07")
         frame.tkraise()
 
+    # Ajustar ventana
     window_gestion_clientes = tk.Toplevel(root)
     window_gestion_clientes.title("Gestión de Clientes")
     window_gestion_clientes.geometry("850x360")
@@ -153,13 +178,9 @@ def show_gestion_clientes():
     con_add_client.place(x=0, y=40, width=850, height=320)
     lbl_margin_y = tk.Label(con_add_client, text="", bg="#2E2E2E")
     lbl_margin_y.pack(anchor="w", pady=4)
-    lbl_nombre = tk.Label(con_add_client, text="Código del Cliente: ", fg="white", background="#2E2E2E")
-    lbl_nombre.pack(anchor="w", padx=margin_x)
-    id_cliente = tk.Entry(con_add_client)
-    id_cliente.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
-    lbl_id = tk.Label(con_add_client, text="Nombre del Cliente: ", fg="white", background="#2E2E2E")
-    lbl_id.pack(anchor="w", padx=margin_x)
+    lbl_nombre = tk.Label(con_add_client, text="Nombre del Cliente: ", fg="white", background="#2E2E2E")
+    lbl_nombre.pack(anchor="w", padx=margin_x)
     nombre_cliente = tk.Entry(con_add_client)
     nombre_cliente.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
@@ -168,152 +189,167 @@ def show_gestion_clientes():
     direccion_cliente = tk.Entry(con_add_client)
     direccion_cliente.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
-    lbl_telefono = tk.Label(con_add_client, text="Teléfono: ", fg="white", background="#2E2E2E")
+    lbl_telefono = tk.Label(con_add_client, text="Teléfono del Cliente: ", fg="white", background="#2E2E2E")
     lbl_telefono.pack(anchor="w", padx=margin_x)
     telefono_cliente = tk.Entry(con_add_client)
     telefono_cliente.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
-    lbl_email = tk.Label(con_add_client, text="Email: ", fg="white", background="#2E2E2E")
+    lbl_email = tk.Label(con_add_client, text="E-mail del Cliente: ", fg="white", background="#2E2E2E")
     lbl_email.pack(anchor="w", padx=margin_x)
     email_cliente = tk.Entry(con_add_client)
     email_cliente.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
-    btn_agregar = tk.Button(con_add_client, text="Agregar Cliente", command=lambda: agregar_cliente(id_cliente, nombre_cliente, direccion_cliente, telefono_cliente, email_cliente, window_gestion_clientes))
+    btn_agregar = tk.Button(con_add_client, text="Agregar Cliente", command=lambda: agregar_cliente(nombre_cliente, direccion_cliente, telefono_cliente, email_cliente, window_gestion_clientes))
     btn_agregar.pack(side='left', padx=margin_x)
 
     btn_cancelar = tk.Button(con_add_client, text="Cancelar")
     btn_cancelar.pack(side='right', padx=margin_x)
 
-    # Panel para Gestionar Clientes
     def buscar():
         if (no_tarea.get() == ""):
             load_list()
         else:
             if (lista_menu.get() == "Buscar por:"):
-                messagebox.showerror("Error", "Por favor seleccione un parametro de busqueda")
+                messagebox.showerror("Error", "Por favor seleccione un parámetro de búsqueda")
             else:
                 par_busqueda = -1
                 if (lista_menu.get() == "ID"):
                     par_busqueda = 0
+                    pal_buscar = str(no_tarea.get())
                 elif (lista_menu.get() == "Nombre"):
                     par_busqueda = 1
+                    pal_buscar = no_tarea.get()
 
-                coincidencias = ResultBusqueda(clientes, no_tarea.get(), par_busqueda)
+                coincidencias = ResultBusqueda(clientes, pal_buscar, par_busqueda)
 
                 for i in tree.get_children():
                     tree.delete(i)
+
                 for cliente in coincidencias:
                     tree.insert("", tk.END, values=cliente)
+    #FUNCION PARA EDITAR
+    def editar_cliente():
+        selected_items = tree.selection()
+        if len(selected_items) == 0:
+            messagebox.showwarning("Editar cliente", "Por favor seleccione un cliente para editar")
+            return
 
-    def eliminar():
-        lista_items_selec = []
-        all_selected = tree.selection()
-        for item in all_selected:
-            item_values = tree.item(item, 'values')
-            lista_items_selec.append(item_values[0])
+        item = tree.item(selected_items[0], 'values')
+        id, nombre, direccion, telefono, email = item
 
-        if len(lista_items_selec) == 0:
-            messagebox.showwarning("Eliminar Cliente", "Por favor seleccione cliente uno para eliminar")
-        else:
-            confirmacion = messagebox.askyesno("Eliminar", f"¿Estas seguro de eliminar?")
-            if confirmacion:
-                indices_eliminar = [i for i, cliente in enumerate(clientes, start=0) if
-                                    cliente[0] in lista_items_selec]
-                for e_cliente in indices_eliminar:
-                    clientes.pop(e_cliente)
-                guardar_clientes(clientes)
-                messagebox.showinfo("Eliminar", "Clientes eliminados con exito.")
-                load_list()
+        ventana_edicion = tk.Toplevel(root)
+        ventana_edicion.title("Editar cliente")
+        ventana_edicion.geometry("400x300")
+        ventana_edicion.configure(bg="#2E2E2E")
 
-    def editar(n_id="", n_nombre="", n_direccion="", n_telefono="", n_email="", ventana: any = None):
-        if n_id == "" or n_nombre == "" or n_direccion == "" or n_telefono == "" or n_email == "":
-            messagebox.showerror("Error", "Todos los campos son obligatorios")
-        else:
-            indice = -1
-            for i, cliente in enumerate(clientes, start=0):
-                if n_id == cliente[0]:
-                    indice = i
-                    break
+        lbl_nombre = tk.Label(ventana_edicion, text="Nombre del cliente: ", fg="white", bg="#2E2E2E")
+        lbl_nombre.pack(anchor="w", padx=10, pady=5)
+        entry_nombre = tk.Entry(ventana_edicion)
+        entry_nombre.insert(0, nombre)
+        entry_nombre.pack(anchor="w", padx=10, pady=5)
 
-            l_cliente = list(clientes[indice])
-            l_cliente[0] = n_id
-            l_cliente[1] = n_nombre
-            l_cliente[2] = n_direccion
-            l_cliente[3] = n_telefono
-            l_cliente[4] = n_email
-            clientes[indice] = tuple(l_cliente)
-            guardar_clientes(clientes)
-            messagebox.showinfo("Editar tarea", "Cliente Editado con exito")
-            ventana.destroy()
+        lbl_direccion = tk.Label(ventana_edicion, text="Dirección del cliente: ", fg="white", bg="#2E2E2E")
+        lbl_direccion.pack(anchor="w", padx=10, pady=5)
+        entry_direccion = tk.Entry(ventana_edicion)
+        entry_direccion.insert(0, direccion)
+        entry_direccion.pack(anchor="w", padx=10, pady=5)
+
+        lbl_telefono = tk.Label(ventana_edicion, text="Télefono del cliente: ", fg="white", bg="#2E2E2E")
+        lbl_telefono.pack(anchor="w", padx=10, pady=5)
+        entry_telefono = tk.Entry(ventana_edicion)
+        entry_telefono.insert(0, telefono)
+        entry_telefono.pack(anchor="w", padx=10, pady=5)
+
+        lbl_email = tk.Label(ventana_edicion, text="E-mail del cliente: ", fg="white", bg="#2E2E2E")
+        lbl_email.pack(anchor="w", padx=10, pady=5)
+        entry_email = tk.Entry(ventana_edicion)
+        entry_email.insert(0, email)
+        entry_email.pack(anchor="w", padx=10, pady=5)
+
+        def actualizar_cliente():
+            nuevo_nombre = entry_nombre.get()
+            nuevo_direccion = entry_direccion.get()
+            nuevo_telefono = entry_telefono.get()
+            nuevo_email = entry_email.get()
+
+            if not nuevo_nombre or not nuevo_direccion or not nuevo_telefono or not nuevo_email:
+                messagebox.showerror("Error", "Por favor llenar todos los campos")
+                return
+
+            if not nuevo_telefono.isdigit():
+                messagebox.showerror("Error", "El teléfono debe ser un número válido.")
+                return
+
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", nuevo_email):
+                messagebox.showerror("Error", "El e-mail debe tener un formato válido.")
+                return
+
+            clientes = leer_clientes()
+            for cliente in clientes:
+                if cliente[3] == nuevo_email and str(cliente[0]) != str(id):
+                    messagebox.showerror("Error", "El correo electrónico ya está registrado.")
+                    return
+
+            clientes_actualizados = []
+            for cliente in clientes:
+                if str(cliente[0]) == str(id):
+                    clientes_actualizados.append((id, nuevo_nombre, nuevo_direccion, nuevo_telefono, nuevo_email))
+                else:
+                    clientes_actualizados.append(cliente)
+
+            guardar_clientes(clientes_actualizados)
+
+            messagebox.showinfo("cliente Actualizado", "Los datos del cliente se actualizaron correctamente.")
+            ventana_edicion.destroy()
             load_list()
 
-    def editar_cliente():
-        lista_items_selec = []
-        all_selected = tree.selection()
-        for item in all_selected:
-            item_values = tree.item(item, 'values')
-            lista_items_selec.append(item_values)
+        btn_actualizar = tk.Button(ventana_edicion, text="Actualizar", command=actualizar_cliente)
+        btn_actualizar.pack(side='left', padx=20, pady=10)
 
-        # print(lista_items_selec)
+        btn_cancelar = tk.Button(ventana_edicion, text="Cancelar", command=ventana_edicion.destroy)
+        btn_cancelar.pack(side='right', padx=20, pady=10)
 
-        if len(lista_items_selec) >= 2:
-            messagebox.showwarning("Editar Cliente", "Seleccione solo uno para editar")
-        elif len(lista_items_selec) == 0:
-            messagebox.showwarning("Editar Cliente", "Por favor seleccione cliente uno para editar")
-        else:
-            window_ingresar_clientes = tk.Toplevel(root)
-            window_ingresar_clientes.title("Editar Clientes")
-            window_ingresar_clientes.geometry("350x250")
-            window_ingresar_clientes.configure(bg="#2E2E2E")
+    def eliminar():
+        selected_items = tree.selection()
 
-            lbl_id = tk.Label(window_ingresar_clientes, text="Código del Cliente: ", fg="white",background="#2E2E2E")
-            lbl_id.pack(anchor="w", padx=30)
-            id_cliente = tk.Entry(window_ingresar_clientes)
-            id_cliente.delete(0, tk.END)
-            id_cliente.insert(0, lista_items_selec[0][0])
-            id_cliente.pack(anchor="w", padx=30, pady=5, fill="x")
+        if len(selected_items) == 0:
+            messagebox.showwarning("Eliminar cliente", "Por favor seleccione un cliente para eliminarlo")
+            return
 
-            lbl_nombre = tk.Label(window_ingresar_clientes, text="Nombre del Cliente: ", fg="white", background="#2E2E2E")
-            lbl_nombre.pack(anchor="w", padx=30)
-            nombre_cliente = tk.Entry(window_ingresar_clientes)
-            nombre_cliente.delete(0, tk.END)
-            nombre_cliente.insert(0, lista_items_selec[0][1])
-            nombre_cliente.pack(anchor="w", padx=30, pady=5, fill="x")
+        item_id = tree.item(selected_items[0], 'values')[0]
 
-            lbl_direccion_u = tk.Label(window_ingresar_clientes, text="Dirección del Cliente: ", fg="white", background="#2E2E2E")
-            lbl_direccion_u.pack(anchor="w", padx=30)
-            direccion_cliente = tk.Entry(window_ingresar_clientes)
-            direccion_cliente.delete(0, tk.END)
-            direccion_cliente.insert(0, lista_items_selec[0][2])
-            direccion_cliente.pack(anchor="w", padx=30, pady=5, fill="x")
+        ventana_confirmacion_eliminar(item_id)
 
-            lbl_telefono = tk.Label(window_ingresar_clientes, text="Teléfono del Cliente: ", fg="white", background="#2E2E2E")
-            lbl_telefono.pack(anchor="w", padx=30)
-            telefono_cliente = tk.Entry(window_ingresar_clientes)
-            telefono_cliente.delete(0, tk.END)
-            telefono_cliente.insert(0, lista_items_selec[0][3])
-            telefono_cliente.pack(anchor="w", padx=30, pady=5, fill="x")
+    def ventana_confirmacion_eliminar(item_id):
+        ventana_confirmacion = tk.Toplevel(root)
+        ventana_confirmacion.title("Confirmar eliminación")
+        ventana_confirmacion.geometry("300x150")
+        ventana_confirmacion.configure(bg="#2E2E2E")
 
-            lbl_email = tk.Label(window_ingresar_clientes, text="Email del Cliente: ", fg="white", background="#2E2E2E")
-            lbl_email.pack(anchor="w", padx=30)
-            email_cliente = tk.Entry(window_ingresar_clientes)
-            email_cliente.delete(0, tk.END)
-            email_cliente.insert(0, lista_items_selec[0][4])
-            email_cliente.pack(anchor="w", padx=30, pady=5, fill="x")
+        mensaje = f"¿Desea eliminar el cliente con ID: {item_id}?"
+        label_mensaje = tk.Label(ventana_confirmacion, text=mensaje, fg="white", bg="#2E2E2E")
+        label_mensaje.pack(pady=20)
 
+        btn_confirmar = tk.Button(ventana_confirmacion, text="Eliminar",
+                                  command=lambda: confirmar_eliminacion(item_id, ventana_confirmacion))
+        btn_confirmar.pack(side=tk.LEFT, padx=20)
 
-            btn_agregar = tk.Button(window_ingresar_clientes, text="Editar Cliente", command=lambda: editar(
-                id_cliente.get(),
-                nombre_cliente.get(),
-                direccion_cliente.get(),
-                telefono_cliente.get(),
-                email_cliente.get(),
-                window_ingresar_clientes
-            ))
-            btn_agregar.pack(side='left', padx=40)
+        btn_cancelar = tk.Button(ventana_confirmacion, text="Cancelar", command=ventana_confirmacion.destroy)
+        btn_cancelar.pack(side=tk.RIGHT, padx=20)
 
-            btn_cancelar = tk.Button(window_ingresar_clientes, text="Cancelar", command=window_ingresar_clientes.destroy)
-            btn_cancelar.pack(side='right', padx=40)
+    def confirmar_eliminacion(item_id, ventana_confirmacion):
+        clientes = leer_clientes()
+
+        clientes_filtrados = [cliente for cliente in clientes if str(cliente[0]) != str(item_id)]
+
+        guardar_clientes(clientes_filtrados)
+
+        load_list()
+
+        ventana_confirmacion.destroy()
+
+        messagebox.showinfo("Eliminar", f"cliente con ID {item_id} eliminado con éxito.")
+
 
     def load_list():
         for i in tree.get_children():
@@ -337,13 +373,13 @@ def show_gestion_clientes():
     button2 = tk.Button(con_gestion_clientes, text="Buscar", command=buscar)
     button2.grid(row=0, column=3, pady=5, padx=25)
 
-    columnas = ('Codigo', 'Nombre', 'Direccion', 'Telefono', 'Email')
+    columnas = ('Id', 'Nombre', 'Dirección', 'Télefono', 'E-mail')
     tree = ttk.Treeview(con_gestion_clientes, columns=columnas, show='headings')
-    tree.heading('Codigo', text='Codigo')
+    tree.heading('Id', text='Id')
     tree.heading('Nombre', text='Nombre')
-    tree.heading('Direccion', text='Direccion')
-    tree.heading('Telefono', text='Telefono')
-    tree.heading('Email', text='Email')
+    tree.heading('Dirección', text='Dirección')
+    tree.heading('Télefono', text='Télefono')
+    tree.heading('E-mail', text='E-mail')
     tree.grid(row=1, column=0, columnspan=4, padx=5, pady=5)
     srollbar = ttk.Scrollbar(con_gestion_clientes, orient='vertical', command=tree.yview)
     tree.config(yscrollcommand=srollbar.set)
@@ -361,29 +397,49 @@ def show_gestion_clientes():
     con_add_client.tkraise()
 
 
-def agregar_cliente(id: any = None, nombre: any = None, direccion: any = None, telefono: any = None, email: any = None, ventana: any = None):
-    if (id.get() == "" and nombre.get() == "" and direccion.get() == "" and telefono.get() == "" and email.get() == ""):
-        messagebox.showerror("Error", "Todos los campos son requeridos")
+def agregar_cliente(nombre: any = None, direccion: any = None, telefono: any = None, email: any = None, ventana: any = None):
+    if (nombre.get() == "" and direccion.get() == "" and telefono.get() == "" and email.get() == ""):
+        messagebox.showerror("Error", "Por favor llenar todos los campos")
         return
 
-    try:
-        with open(DATA_FILE_CLIENTES, "a") as file:
-            file.write(f"{int(id.get())},{nombre.get()},{(direccion.get())},{int(telefono.get())},{(email.get())}\n")
-            messagebox.showinfo("Cliente Agregado", "Cliente agregado correctamente")
+    if not telefono.get().isdigit():
+        messagebox.showerror("Error", "El teléfono debe ser un número válido.")
+        return
 
-            id.delete(0, tk.END)
-            nombre.delete(0, tk.END)
-            direccion.delete(0, tk.END)
-            telefono.delete(0, tk.END)
-            email.delete(0, tk.END)
-    except:
-        messagebox.showerror("Error", "Verifique los campos ingresados.")
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email.get()):
+        messagebox.showerror("Error", "El email debe tener un formato válido.")
+        return
+
+    clientes = leer_clientes()
+
+    email_normalizado = email.get().strip().lower()
+    for cliente in clientes:
+        if cliente[4].strip().lower() == email_normalizado:
+            messagebox.showerror("Error", "El correo electrónico ya está registrado.")
+            return
+
+    try:
+        id = generar_id()
+
+        with open(DATA_FILE_CLIENTES, "a") as file:
+            file.write(f"{id},{nombre.get()},{direccion.get()},{telefono.get()},{email.get()}\n")
+
+        messagebox.showinfo("Cliente Agregado", f"Cliente agregado correctamente")
+
+        # Limpiar los campos
+        nombre.delete(0, tk.END)
+        direccion.delete(0, tk.END)
+        telefono.delete(0, tk.END)
+        email.delete(0, tk.END)
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Verifique los campos ingresados. Detalle del error: {e}")
 
 
 # Crear botones
 buttons = [
     ("Gestión de Clientes", show_gestion_clientes, button_add_bg),
-    ("Gestión de vendedores", ver_tareas, "#007BFF"),  # Azul genérico
+    ("Gestión de Vendedores", ver_tareas, "#007BFF"),  # Azul genérico
     ("Gestión de Clientes", show_gestion_clientes, button_delete_bg),
     ("Registro de Facturas", cambiar_estado, "#007BFF"),
     ("Gestión de Usuarios", editar_tarea, button_edit_bg),
