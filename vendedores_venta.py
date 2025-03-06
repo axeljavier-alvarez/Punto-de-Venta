@@ -43,21 +43,18 @@ def leer_vendedores():
         return []
     vendedores = []
     with open(DATE_FILE_VENDEDORES, "r") as file:
-        for idx, line in enumerate(file, start=1):
+        for line in file:
             parts = line.strip().split(",")
-            if len(parts) == 3:
-                nombre, telefono, email = parts
-                vendedores.append((idx, nombre, telefono, email))
-            else:
-                print(f"Advertencia: línea con formato incorrecto ignorada: {line}")
+            if len(parts) == 4:
+                id_vendedor, nombre, telefono, email = parts
+                vendedores.append((int(id_vendedor), nombre, telefono, email))
     return vendedores
 
 
 def guardar_vendedores(vendedores):
     with open(DATE_FILE_VENDEDORES, "w") as file:
         for vendedor in vendedores:
-            #Guardar campos sin incluir el id
-            file.write(f"{vendedor[0]},{vendedor[1]},{vendedor[2]}\n")
+            file.write(f"{vendedor[0]},{vendedor[1]},{vendedor[2]},{vendedor[3]}\n")
 
 def generar_id():
     vendedores = leer_vendedores()
@@ -66,16 +63,22 @@ def generar_id():
     else:
         return len(vendedores) + 1
 
-def BuscarVendedores(vendedores=[], pal_buscar="", par_busqueda=0):
+
+def BuscarVendedores(vendedores, pal_buscar, par_busqueda):
     resultado = []
+
+    print(f"Buscando: {pal_buscar} en campo {par_busqueda}")
+
     for vendedor in vendedores:
         if par_busqueda == 0:
-            # Convertir ID a cadena para comparación
             if str(vendedor[0]) == pal_buscar:
                 resultado.append(vendedor)
-        else:
-            if re.match(f".*{pal_buscar}", vendedor[par_busqueda], re.IGNORECASE):
+        elif par_busqueda == 1:
+            if re.search(f".*{pal_buscar}.*", vendedor[1], re.IGNORECASE):
                 resultado.append(vendedor)
+        else:
+            pass
+
     return resultado
 
 # ---------------------------Ventana Principal para gestion de vendedores
@@ -113,7 +116,7 @@ def show_gestion_vendedores():
     btn_gestionar.pack(side=tk.LEFT, fill=tk.Y)
     gestionar_indicador = tk.Label(con_menu, text=' ', bg='#0477BF')
     gestionar_indicador.place(x=73.25, y=35, width=128, height=10)
-    # REGISTRAR VENDEDORES con_add_vendedor
+
     margin_x = 100
     con_add_vendedor = tk.Frame(window_gestion_vendedores, background="#2E2E2E")
     con_add_vendedor.place(x=0, y=40, width=850, height=320)
@@ -144,9 +147,8 @@ def show_gestion_vendedores():
     btn_cancelar = tk.Button(con_add_vendedor, text="Cancelar")
     btn_cancelar.pack(side='right', padx=margin_x)
 
-    #REGISTRAR DEMAS FUNCIONES DEL CRUD
     def buscar():
-        if (no_vendedor.get() == ""):  # Verifica que no_vendedor esté definida
+        if (no_vendedor.get() == ""):
             load_list()
         else:
             if (lista_menu.get() == "Buscar por:"):
@@ -155,33 +157,134 @@ def show_gestion_vendedores():
                 par_busqueda = -1
                 if (lista_menu.get() == "ID"):
                     par_busqueda = 0
+                    pal_buscar = str(no_vendedor.get())
                 elif (lista_menu.get() == "Nombre"):
                     par_busqueda = 1
+                    pal_buscar = no_vendedor.get()
 
-                coincidencias = BuscarVendedores(vendedores, no_vendedor.get(), par_busqueda)
+                coincidencias = BuscarVendedores(vendedores, pal_buscar, par_busqueda)
 
                 for i in tree.get_children():
                     tree.delete(i)
+
                 for vendedor in coincidencias:
                     tree.insert("", tk.END, values=vendedor)
+    #FUNCION PARA EDITAR
+    def editar_vendedor():
+        selected_items = tree.selection()
+        if len(selected_items) == 0:
+            messagebox.showwarning("Editar Vendedor", "Por favor seleccione un vendedor para editar")
+            return
+
+        item = tree.item(selected_items[0], 'values')
+        id_vendedor, nombre, telefono, email = item
+
+        ventana_edicion = tk.Toplevel(root)
+        ventana_edicion.title("Editar Vendedor")
+        ventana_edicion.geometry("400x250")
+        ventana_edicion.configure(bg="#2E2E2E")
+
+        lbl_nombre = tk.Label(ventana_edicion, text="Nombre del Vendedor: ", fg="white", bg="#2E2E2E")
+        lbl_nombre.pack(anchor="w", padx=10, pady=5)
+        entry_nombre = tk.Entry(ventana_edicion)
+        entry_nombre.insert(0, nombre)
+        entry_nombre.pack(anchor="w", padx=10, pady=5)
+
+        lbl_telefono = tk.Label(ventana_edicion, text="Télefono del Vendedor: ", fg="white", bg="#2E2E2E")
+        lbl_telefono.pack(anchor="w", padx=10, pady=5)
+        entry_telefono = tk.Entry(ventana_edicion)
+        entry_telefono.insert(0, telefono)
+        entry_telefono.pack(anchor="w", padx=10, pady=5)
+
+        lbl_email = tk.Label(ventana_edicion, text="Email del Vendedor: ", fg="white", bg="#2E2E2E")
+        lbl_email.pack(anchor="w", padx=10, pady=5)
+        entry_email = tk.Entry(ventana_edicion)
+        entry_email.insert(0, email)
+        entry_email.pack(anchor="w", padx=10, pady=5)
+
+        def actualizar_vendedor():
+            nuevo_nombre = entry_nombre.get()
+            nuevo_telefono = entry_telefono.get()
+            nuevo_email = entry_email.get()
+
+            if not nuevo_nombre or not nuevo_telefono or not nuevo_email:
+                messagebox.showerror("Error", "Por favor llenar todos los campos")
+                return
+
+            if not nuevo_telefono.isdigit():
+                messagebox.showerror("Error", "El teléfono debe ser un número válido.")
+                return
+
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", nuevo_email):
+                messagebox.showerror("Error", "El email debe tener un formato válido.")
+                return
+
+            vendedores = leer_vendedores()
+            for vendedor in vendedores:
+                if vendedor[3] == nuevo_email and str(vendedor[0]) != str(id_vendedor):
+                    messagebox.showerror("Error", "El correo electrónico ya está registrado.")
+                    return
+
+            vendedores_actualizados = []
+            for vendedor in vendedores:
+                if str(vendedor[0]) == str(id_vendedor):
+                    vendedores_actualizados.append((id_vendedor, nuevo_nombre, nuevo_telefono, nuevo_email))
+                else:
+                    vendedores_actualizados.append(vendedor)
+
+            guardar_vendedores(vendedores_actualizados)
+
+            messagebox.showinfo("Vendedor Actualizado", "Los datos del vendedor se actualizaron correctamente.")
+            ventana_edicion.destroy()
+            load_list()
+
+        btn_actualizar = tk.Button(ventana_edicion, text="Actualizar", command=actualizar_vendedor)
+        btn_actualizar.pack(side='left', padx=20, pady=10)
+
+        btn_cancelar = tk.Button(ventana_edicion, text="Cancelar", command=ventana_edicion.destroy)
+        btn_cancelar.pack(side='right', padx=20, pady=10)
 
     def eliminar():
-        lista_items_selec = []
-        all_selected = tree.selection()
-        for item in all_selected:
-            item_values = tree.item(item, 'values')
-            lista_items_selec.append(item_values[0])  # ID del vendedor
+        selected_items = tree.selection()
 
-        if len(lista_items_selec) == 0:
+        if len(selected_items) == 0:
             messagebox.showwarning("Eliminar Vendedor", "Por favor seleccione un vendedor para eliminarlo")
-        else:
-            confirmacion = messagebox.askyesno("Eliminar", "¿Estás seguro de eliminar el vendedor?")
-            if confirmacion:
-                # Filtrar vendedores que no estén en la lista de elementos seleccionados
-                vendedores[:] = [vendedor for vendedor in vendedores if str(vendedor[0]) not in lista_items_selec]
-                guardar_vendedores(vendedores)  # Asegúrate de usar guardar_vendedores
-                messagebox.showinfo("Eliminar", "Vendedores eliminados con éxito.")
-                load_list()
+            return
+
+        item_id = tree.item(selected_items[0], 'values')[0]
+
+        ventana_confirmacion_eliminar(item_id)
+
+    def ventana_confirmacion_eliminar(item_id):
+        ventana_confirmacion = tk.Toplevel(root)
+        ventana_confirmacion.title("Confirmar eliminación")
+        ventana_confirmacion.geometry("300x150")
+        ventana_confirmacion.configure(bg="#2E2E2E")
+
+        mensaje = f"¿Desea eliminar el vendedor con ID: {item_id}?"
+        label_mensaje = tk.Label(ventana_confirmacion, text=mensaje, fg="white", bg="#2E2E2E")
+        label_mensaje.pack(pady=20)
+
+        btn_confirmar = tk.Button(ventana_confirmacion, text="Eliminar",
+                                  command=lambda: confirmar_eliminacion(item_id, ventana_confirmacion))
+        btn_confirmar.pack(side=tk.LEFT, padx=20)
+
+        btn_cancelar = tk.Button(ventana_confirmacion, text="Cancelar", command=ventana_confirmacion.destroy)
+        btn_cancelar.pack(side=tk.RIGHT, padx=20)
+
+    def confirmar_eliminacion(item_id, ventana_confirmacion):
+        vendedores = leer_vendedores()
+
+        vendedores_filtrados = [vendedor for vendedor in vendedores if str(vendedor[0]) != str(item_id)]
+
+        guardar_vendedores(vendedores_filtrados)
+
+        load_list()
+
+        ventana_confirmacion.destroy()
+
+        messagebox.showinfo("Eliminar", f"Vendedor con ID {item_id} eliminado con éxito.")
+
 
     def load_list():
         for i in tree.get_children():
@@ -218,50 +321,48 @@ def show_gestion_vendedores():
     con_gestion_vendedor.grid_rowconfigure(1, weight=0)
     con_gestion_vendedor.grid_columnconfigure(1, weight=1)
 
-    btn_editar = tk.Button(con_gestion_vendedor, text="Editar")
+    btn_editar = tk.Button(con_gestion_vendedor, text="Editar", command=editar_vendedor)
     btn_editar.grid(row=2, column=0, padx=5, pady=5)
 
     btn_eliminar = tk.Button(con_gestion_vendedor, text="Eliminar", command=eliminar)
     btn_eliminar.grid(row=2, column=1, padx=5, pady=5)
     load_list()
 
-    #GESTION DE VENDEDORES SOLUCIONAR PROBLEMA DE ABRIR OTRA VENTANA AL PRINCIPIO
     con_gestion_vendedores = tk.Frame(window_gestion_vendedores, background='#2E2E2E')
     con_gestion_vendedores.place(x=0, y=40, width=850, height=320)
     con_add_vendedor.tkraise()
 
 
-#Función para agregar vendedor
 def agregar_vendedor(nombre: any = None, telefono: any = None, email: any = None, ventana: any = None):
-    # Comprobar que todos los campos estén llenos
     if nombre.get() == "" or telefono.get() == "" or email.get() == "":
         messagebox.showerror("Error", "Por favor llenar todos los campos")
         return
 
-    # Validando télefono
     if not telefono.get().isdigit():
         messagebox.showerror("Error", "El teléfono debe ser un número válido.")
         return
 
-    # Validando email
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email.get()):
         messagebox.showerror("Error", "El email debe tener un formato válido.")
         return
 
-    #Verificando si ya esta un correo registrado
     vendedores = leer_vendedores()
+
+    email_normalizado = email.get().strip().lower()
     for vendedor in vendedores:
-        if vendedor[2] == email.get():
+        if vendedor[3].strip().lower() == email_normalizado:
             messagebox.showerror("Error", "El correo electrónico ya está registrado.")
             return
 
     try:
         id_vendedor = generar_id()
+
         with open(DATE_FILE_VENDEDORES, "a") as file:
-            file.write(f"{nombre.get()},{telefono.get()},{email.get()}\n")
+            file.write(f"{id_vendedor},{nombre.get()},{telefono.get()},{email.get()}\n")
 
-        messagebox.showinfo("Vendedor Agregado", f"Vendedor agregado correctamente con ID {id_vendedor}")
+        messagebox.showinfo("Vendedor Agregado", f"Vendedor agregado correctamente")
 
+        # Limpiar los campos
         nombre.delete(0, tk.END)
         telefono.delete(0, tk.END)
         email.delete(0, tk.END)
