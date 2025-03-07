@@ -1,4 +1,0 @@
-1,Angel Rodriguez,Ciudad,34234244,angelr@gmail.com
-2,Jose Mides,Ciudad,34231223,jose@gmail.com
-3,Angel Rodriguez A.,Guatemala,23432345,fer@gmail.com
-4,Frydda y su casi algo,Ciudad,23342334,frida@gmail.com
