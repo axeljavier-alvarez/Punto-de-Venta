@@ -1180,14 +1180,28 @@ def facturacion():
         indicador.config(bg="#D97A07")
         frame.tkraise()
 
-    def agregar_item_factura(item=-1, cantidad=-1):
-        productos = leer_productos()
-        existe = False
-        indice = -1
-        if cantidad <= 0:
-            messagebox.showerror("Error", "Ingrese un numero mayor a cero para la cantidad del producto")
+
+    def agregar_item_factura(item_str="", cantidad_str=""):
+        cantidad = 0
+        try:
+            cantidad = int(cantidad_str)
+        except:
+            messagebox.showerror("Error", "La cantidad debe ser un número entero")
             return
 
+        try:
+            item = int(item_str)
+        except:
+            messagebox.showerror("Error", "Seleccione un item")
+            return
+        
+        if len(lista_productos_factura) == 0:
+            messagebox.showerror("Error", "No hay productos en la factura")
+            return
+
+        productos = leer_productos()
+        existe = False
+        indice = -1        
         if len(lista_productos_factura) != 0:
             for i, buscar_item in enumerate(lista_productos_factura, start=0):
                 if buscar_item[0] == productos[item][1]:
@@ -1355,7 +1369,9 @@ def facturacion():
     lbl_nombre = tk.Label(con_add_product, text="Seleccione un Vendedor: ", fg="white", background="#2E2E2E")
     lbl_nombre.pack(anchor="w", padx=margin_x)
     lista_vendedores = get_list_for_lisbox("vendedores")
-    opc_vendedores = tk.StringVar(con_add_product)
+    opc_vendedores = tk.StringVar(con_add_product)  
+    if lista_vendedores == []:
+        lista_vendedores.append("")
     checklist_vendedores = tk.OptionMenu(con_add_product, opc_vendedores, *lista_vendedores)
     checklist_vendedores.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
@@ -1363,6 +1379,8 @@ def facturacion():
     lbl_codigo.pack(anchor="w", padx=margin_x)
     lista_clientes = get_list_for_lisbox("clientes")
     opc_clientes = tk.StringVar(con_add_product)
+    if( lista_clientes == [] ):
+        lista_clientes.append("")
     checklist_clientes = tk.OptionMenu(con_add_product, opc_clientes, *lista_clientes)
     checklist_clientes.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
@@ -1370,6 +1388,8 @@ def facturacion():
     lbl_precio_u.pack(anchor="w", padx=margin_x)
     lista_productos = get_list_for_lisbox("productos")
     opc_productos = tk.StringVar(con_add_product)
+    if lista_productos == []:
+        lista_productos.append("")
     checklist_productos = tk.OptionMenu(con_add_product, opc_productos, *lista_productos, command=mostrar_stock)
     checklist_productos.pack(anchor="w", padx=margin_x, pady=5, fill="x")
 
@@ -1382,12 +1402,13 @@ def facturacion():
 
     frame_stock = tk.Frame(con_add_product, background="#2E2E2E")
     frame_stock.pack(anchor='w', padx=margin_x, pady=5)
+    
     btn_agregar = tk.Button(frame_stock, text="Agregar",
                             command=lambda: agregar_item_factura(int(lista_productos.index(opc_productos.get())),
-                                                                 int(stock_producto.get())))
+                                                                 stock_producto.get() ))
     # btn_agregar.pack( anchor='w', padx=margin_x , pady=5 )
     btn_agregar.pack(side=tk.LEFT)
-    indicador_stock = tk.Label(frame_stock, text="Stock: ", fg="white", background="#2E2E2E", font=('bold', 15))
+    indicador_stock = tk.Label(frame_stock, text="", fg="white", background="#2E2E2E", font=('bold', 15))
     indicador_stock.pack(side=tk.LEFT, padx=20)
 
     frame_f = tk.Frame(con_add_product)
